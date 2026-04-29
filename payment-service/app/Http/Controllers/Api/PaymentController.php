@@ -25,13 +25,11 @@ class PaymentController extends Controller
         return response()->json($payment, 201);
     }
 
-    // ✅ TAMBAH DI SINI
     public function show($id)
     {
         return response()->json(Payment::findOrFail($id));
     }
 
-    // ✅ TAMBAH DI SINI
     public function update(Request $request, $id)
     {
         $payment = Payment::findOrFail($id);
@@ -55,5 +53,31 @@ class PaymentController extends Controller
         return response()->json([
             'message' => 'Deleted successfully'
         ]);
+    }
+
+    // ✅ TAMBAHAN - CONSUMER ke OrderService
+    public function processPayment(Request $request)
+    {
+        $orderResponse = Http::get('http://localhost:8000/api/orders/' . $request->order_id);
+
+        if ($orderResponse->failed()) {
+            return response()->json([
+                'message' => 'Gagal mengambil data order dari OrderService'
+            ], 502);
+        }
+
+        $order = $orderResponse->json();
+
+        $payment = Payment::create([
+            'order_id' => $request->order_id,
+            'amount' => $order['amount'] ?? $request->amount,
+            'status' => 'paid'
+        ]);
+
+        return response()->json([
+            'message' => 'Pembayaran berhasil',
+            'payment' => $payment,
+            'order' => $order
+        ], 201);
     }
 }
