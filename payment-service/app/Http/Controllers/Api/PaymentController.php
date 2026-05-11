@@ -19,7 +19,7 @@ class PaymentController extends Controller
         $payment = Payment::create([
             'product_id' => $request->product_id,
             'amount' => $request->amount,
-            'status' => 'pending'
+            'status' => $request->status ?? 'pending'
         ]);
 
         return response()->json($payment, 201);
